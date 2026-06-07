@@ -1,0 +1,11 @@
+services:
+  api:
+    build: { context: ., dockerfile: docker/Dockerfile }
+    ports: ["8000:8000"]
+    environment: ["GITHUB_TOKEN=${GITHUB_TOKEN:-}"]
+    volumes: ["./artifacts:/app/artifacts", "./data/processed:/app/data/processed"]
+  pipeline:
+    build: { context: ., dockerfile: docker/Dockerfile }
+    environment: ["GITHUB_TOKEN=${GITHUB_TOKEN:-}"]
+    volumes: ["./artifacts:/app/artifacts", "./data/processed:/app/data/processed"]
+    command: ["python", "-m", "src.pipeline.run_pipeline"]

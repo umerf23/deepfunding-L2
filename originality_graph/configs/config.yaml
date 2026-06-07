@@ -1,0 +1,51 @@
+# ------------------------------------------------------------------
+# Solution 2 - Graph Centrality Originality (deps.dev ecosystem network)
+# Gitcoin Grants Round 24, Level II
+# ------------------------------------------------------------------
+
+paths:
+  repos_to_predict: "data/raw/repos_to_predict.csv"
+  engineered_features: "data/processed/centrality_features.csv"
+  submission: "artifacts/originality-predictions.csv"
+  graph_export: "artifacts/ecosystem_graph.gexf"
+  cache_dir: "data/processed/cache"
+
+depsdev:
+  base_url: "https://api.deps.dev/v3"
+  timeout_seconds: 30
+  max_retries: 4
+  backoff_base_seconds: 1.5
+  resolvable_systems: ["NPM", "CARGO", "MAVEN", "PYPI"]
+
+github:
+  base_url: "https://api.github.com"
+  timeout_seconds: 30
+  max_retries: 4
+  backoff_base_seconds: 1.5
+  token_env_var: "GITHUB_TOKEN"
+
+features:
+  # cap per-repo dependency subgraph so one giant tree cannot swamp the network
+  max_transitive_nodes: 3000
+  source_extensions: [".sol", ".rs", ".go", ".py", ".ts", ".js"]
+
+model:
+  use_lgbm_rank: false        # blend a LightGBM head fit on sample labels
+  lgbm_blend_weight: 0.0      # 0..1 weight on the LightGBM prediction
+  random_state: 42
+  n_estimators: 300
+  max_depth: 4
+  learning_rate: 0.03
+  subsample: 0.85
+  colsample_bytree: 0.85
+  cv_folds: 5
+
+scoring:
+  output_decimals: 4
+  clip_min: 0.01
+  clip_max: 0.99
+
+runtime:
+  request_sleep_seconds: 0.15
+  parallel_workers: 4
+  log_level: "INFO"
